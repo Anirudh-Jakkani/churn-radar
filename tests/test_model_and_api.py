@@ -60,3 +60,15 @@ def test_api_batch(client):
     r = client.post("/predict/batch", files={"file": ("c.csv", io.BytesIO(sample.encode()), "text/csv")})
     assert r.status_code == 200
     assert r.json()["n_customers"] == 50
+
+
+def test_api_batch_pdf(client):
+    pdf = (RAW_DATA.parents[1] / "sample" / "customers_sample.pdf").read_bytes()
+    r = client.post("/predict/batch", files={"file": ("c.pdf", io.BytesIO(pdf), "application/pdf")})
+    assert r.status_code == 200
+    assert r.json()["n_customers"] == 60
+
+
+def test_api_batch_rejects_non_table_file(client):
+    r = client.post("/predict/batch", files={"file": ("c.pdf", io.BytesIO(b"not a pdf"), "application/pdf")})
+    assert r.status_code == 422

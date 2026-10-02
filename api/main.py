@@ -2,7 +2,6 @@
 
 Run:  uvicorn api.main:app --reload     (docs at http://localhost:8000/docs)
 """
-import io
 from contextlib import asynccontextmanager
 from typing import Literal
 
@@ -11,6 +10,7 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel, Field
 
 from src.config import ID_COL
+from src.pdf_tables import read_customer_file
 from src.predict import ChurnPredictor
 
 YesNo = Literal["Yes", "No"]
@@ -80,9 +80,10 @@ def predict(customer: Customer, top_reasons: int = 5):
 @app.post("/predict/batch")
 async def predict_batch(file: UploadFile = File(...)):
     try:
-        df = pd.read_csv(io.BytesIO(await file.read()))
+        df = read_customer_file(file.filename or "", await file.read())
         preds = state["predictor"].predict(df)
-    except (ValueError, pd.errors.ParserError) as e:
+    except Exception as e:  # unreadable file or missing columns
+
         raise HTTPException(status_code=422, detail=str(e))
     if ID_COL in df:
         preds.insert(0, ID_COL, df[ID_COL])

@@ -14,10 +14,13 @@ import streamlit as st
 
 from app.style import (CSS, CYAN, DANGER, MUTED, RISK_COLORS, SAFE, VIOLET, WARN,
                        hero, kpi, section, style_fig)
-from src.config import ID_COL, MODEL_PATH, TARGET
+from src.config import ID_COL, MODEL_PATH, ROOT, TARGET
 from src.data import clean, load_raw, validate_columns
 from src.features import CATEGORY_OPTIONS, INTERNET_ADDONS, add_features
+from src.pdf_tables import read_customer_file
 from src.predict import ChurnPredictor
+
+SAMPLE_PDF = ROOT / "data" / "sample" / "customers_sample.pdf"
 
 st.set_page_config(page_title="ChurnRadar", page_icon="📡", layout="wide")
 st.markdown(CSS, unsafe_allow_html=True)
@@ -265,23 +268,35 @@ with tab_lab:
 # ---------------------------------------------------------------- Batch Radar
 with tab_batch:
     c1, c2 = st.columns([2, 1], vertical_alignment="bottom")
-    upload = c1.file_uploader("Upload customers (CSV with the Telco columns)", type="csv")
-    if c2.button("✨ Scan the demo dataset (7,043 customers)", width="stretch"):
-        st.session_state.batch_raw = load_raw()
-    if upload is not None:
-        st.session_state.batch_raw = pd.read_csv(upload)
+    upload = c1.file_uploader("Upload customers: a PDF with a customer table, or a CSV",
+                              type=["pdf", "csv"])
+    with c2:
+        if st.button("✨ Scan the demo dataset (7,043 customers)", width="stretch"):
+            st.session_state.batch_raw = load_raw()
+            st.session_state.batch_source = None
+        st.download_button("📄 Get a sample PDF to try", SAMPLE_PDF.read_bytes(),
+                           "customers_sample.pdf", "application/pdf", width="stretch")
+
+    batch_error = None
+    if upload is not None and st.session_state.get("batch_source") != upload.file_id:
+        try:
+            with st.spinner(f"Reading {upload.name}..."):
+                st.session_state.batch_raw = read_customer_file(upload.name, upload.getvalue())
+            st.session_state.batch_source = upload.file_id
+            st.toast(f"Read {len(st.session_state.batch_raw):,} customers from {upload.name}", icon="📄")
+        except Exception as e:  # unreadable file: show it instead of crashing the app
+            batch_error = f"Couldn't read {upload.name}: {e}"
 
     raw = st.session_state.get("batch_raw")
-    batch_error = None
-    if raw is not None:
+    if raw is not None and not batch_error:
         try:
             validate_columns(raw)
         except ValueError as e:
             batch_error = str(e)
-    if raw is None:
-        st.info("Upload a CSV or scan the demo dataset to light up the radar.", icon="📡")
-    elif batch_error:
+    if batch_error:
         st.error(batch_error)
+    elif raw is None:
+        st.info("Upload a PDF or CSV, or scan the demo dataset, to light up the radar.", icon="📡")
     else:
         df = score(raw)
         st.session_state.batch_scored = df

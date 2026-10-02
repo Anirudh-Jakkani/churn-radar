@@ -25,12 +25,12 @@ pip install -r requirements.txt
 python -m src.train --trials 40          # train + tune + save model (≈ 2–4 min)
 streamlit run app/streamlit_app.py       # dashboard  → http://localhost:8501
 uvicorn api.main:app --reload            # REST API   → http://localhost:8000/docs
-pytest                                   # 10 tests
+pytest                                   # 13 tests
 ```
 
 ## Dashboard tabs
 - **🔬 Customer Lab**: build a customer profile (or load a preset or a random real customer) and get a live risk gauge, a verdict, SHAP reasons and retention actions.
-- **📡 Batch Radar**: upload a CSV or scan the demo data. Shows KPIs (including monthly revenue at risk), the risk distribution, a contract × internet heat map, a searchable watchlist and a CSV export. You can open any customer in the Customer Lab.
+- **📡 Batch Radar**: upload a **PDF** with a customer table (multi-page tables are joined automatically) or a CSV, or scan the demo data. A sample PDF is in `data/sample/` and can be downloaded in the app. Shows KPIs (including monthly revenue at risk), the risk distribution, a contract × internet heat map, a searchable watchlist and a CSV export. You can open any customer in the Customer Lab.
 - **🧠 Model Insights**: metrics, ROC curve, confusion matrix, global feature importance and the model leaderboard.
 - **🗺️ Data Explorer**: churn rate by segment and numeric distributions for churned vs. stayed customers.
 
@@ -40,15 +40,16 @@ pytest                                   # 10 tests
 | GET | `/health` | Liveness + model loaded |
 | GET | `/model/info` | Model name, threshold, metrics, feature importance |
 | POST | `/predict` | One customer (JSON) → probability, verdict, risk level, reasons, actions |
-| POST | `/predict/batch` | CSV upload → predictions for every row |
+| POST | `/predict/batch` | PDF or CSV upload → predictions for every row |
 
 ## Project layout
 ```
-src/        config, data cleaning, feature engineering, training, prediction, SHAP, retention playbook
+src/        config, data cleaning, PDF table reader, feature engineering, training, prediction, SHAP, retention playbook
 app/        Streamlit dashboard (streamlit_app.py) + visual theme (style.py)
 api/        FastAPI service
 models/     churn_model.joblib + report.json (metrics, ROC, leaderboard)
 notebooks/  EDA.ipynb
+scripts/    make_sample_pdf.py (regenerates the sample PDF)
 tests/      pytest suite
 ```
 

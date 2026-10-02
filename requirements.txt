@@ -11,6 +11,8 @@ fastapi
 uvicorn[standard]
 pydantic
 python-multipart
+pdfplumber
+reportlab
 matplotlib
 seaborn
 streamlit
