@@ -52,6 +52,13 @@ notebooks/  EDA.ipynb
 tests/      pytest suite
 ```
 
+## Deploy on Streamlit Community Cloud
+1. Go to [share.streamlit.io](https://share.streamlit.io), click **Create app**, then **Deploy a public app from GitHub**.
+2. Repository `Anirudh-Jakkani/churn-radar`, branch `main`, main file `app/streamlit_app.py`.
+3. Under **Advanced settings**, pick Python 3.12 or newer, then click **Deploy**.
+
+Cloud installs the lean `app/requirements.txt` (the dashboard doesn't need training or API packages). The trained model in `models/` ships with the repo.
+
 ## Docker
 ```bash
 docker build -t churn .

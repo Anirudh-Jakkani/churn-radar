@@ -1,0 +1,10 @@
+# Dashboard-only dependencies (used by Streamlit Community Cloud).
+# scikit-learn and xgboost are pinned to the versions the saved model was trained with.
+scikit-learn==1.9.1
+xgboost==3.4.1
+shap>=0.52
+streamlit>=1.64
+pandas>=3.0
+numpy>=2.3
+plotly>=6.0
+joblib>=1.5
